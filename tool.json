@@ -1,16 +1,39 @@
 {
-  "id": "coolcode-tool-template",
-  "title": "CoolCode Tool Starter",
-  "description": "A browser-only example that trims lines and removes exact duplicates.",
-  "category": "security",
-  "tags": ["text", "lines", "duplicates"],
-  "icon": "scan-search",
-  "url": "/coolcode-tool-template/",
-  "source": "https://github.com/jsdyer/coolcode-tool-template",
+  "id": "fossilneighbours",
+  "title": "Fossil Neighbours",
+  "description": "Explore the fossils recorded at Joggins and Haslam, then compare Canadian collections whose ages overlap.",
+  "category": "places",
+  "tags": [
+    "paleontology",
+    "Canada",
+    "Joggins",
+    "Haslam",
+    "fossils",
+    "geology"
+  ],
+  "icon": "layers",
+  "url": "/fossilneighbours/",
+  "source": "https://github.com/jsdyer/fossilneighbours",
   "hosting": "project",
   "access": "browser",
   "data_info": {
-    "mode": "local",
-    "detail": "The browser reads the text you paste and compares its lines."
+    "mode": "snapshot",
+    "detail": "Paleobiology Database collections, occurrence identifications and references document the Joggins and Haslam formations and selected age peers.",
+    "cadence": "Monthly",
+    "probes": [
+      {
+        "label": "Data retrieved",
+        "url": "https://coolcode.ca/fossilneighbours/data/index.json",
+        "path": [
+          "retrieved"
+        ],
+        "count_at": {
+          "path": [
+            "count"
+          ],
+          "unit": "occurrence records"
+        }
+      }
+    ]
   }
 }

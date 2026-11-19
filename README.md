@@ -1,115 +1,25 @@
-# CoolCode browser tool template
+# Fossil Neighbours
 
-A starting point for independent tools at `coolcode.ca/<repo>/`: a working local-text
-example, responsive UI, Python standard-library build, Node tests, PR checks and Pages
-publication. No npm install is needed.
-
-## Using the example
+[Explore the fossil collections](https://coolcode.ca/fossilneighbours/)
 
 <!-- coolcode:guide -->
-The first occurrence of each trimmed line keeps its place. Compare the output with the original text before copying the result.
+Start at Coal Mine Point in the Joggins Formation and search for Hylonomus to see how several reported names resolve to one accepted taxon. Switch to Haslam on Vancouver Island to compare its much younger collections with Canadian collections whose age ranges overlap.
 <!-- /coolcode:guide -->
 
-For a real tool, replace this paragraph with one or two plain-text sentences
-about an example, a limit or how to interpret the results. Keep the source,
-coverage, refresh behaviour and a worked example in this README as appropriate.
-When updating a tool, revise any details its behaviour has changed and keep the
-homepage's shorter data-source sentence in `tool.json` accurate.
-The hub imports the marked note into the catalogue README.
+## Reading the records
 
-## One-time template setup
+The formation view counts PBDB occurrence IDs, distinct collection IDs, and distinct nonzero accepted taxon IDs separately. One occurrence represents a published identification at a collection. A collection can contain several records of the same taxon, and an accepted taxon can be at genus, family or another rank. Identifications without an accepted taxon ID remain searchable and do not enter the accepted-taxon count. The database reflects the literature entered to date and sampling effort varies.
 
-Enable **Settings → General → Template repository** here. This repository does not
-need Pages enabled: its workflow builds/tests but intentionally skips deployment.
-New copies also skip deployment until `scripts/init.py` sets the tool ID to match
-their repository name. This lets you create the repo before configuring Pages.
+Choose a collection to read its occurrence records and source papers. Ages are the older and younger bounds assigned by the Paleobiology Database in millions of years before present. Overlap does not establish that two finds lived at the same moment. The environment filter requires identical, nonempty PBDB environment labels. “Marine indet.” and other broad labels retain their original meaning.
 
-## Start a new tool
+## Coverage and sources
 
-1. Select **Use this template → Create a new repository**, choose owner `jsdyer`,
-   a unique lowercase name such as `my-tool`, and public visibility.
-2. Clone the new repository. Use Python 3.12+ and Node 24+.
-3. Set the identity, using a slug that matches the repository name:
+The formation presets include Canadian PBDB collections explicitly assigned to Joggins in Nova Scotia and Haslam in British Columbia. For every focal collection, the refresh searches all Canadian collections overlapping its age range. Collections from a different or unnamed formation qualify when their numerical age intervals overlap for a positive duration. The tool retains up to six age peers and, separately, up to six peers with the same recorded environment. It ranks by the sum of absolute differences between the two older and two younger bounds, breaking ties by collection ID. The local snapshot includes all occurrence records returned for the selected collection IDs. The Joggins and Haslam formations have different geological ages.
 
-```sh
-python3 scripts/init.py my-tool --title "My Tool" --description "Describe what this tool does."
-```
+Source data come from the [Paleobiology Database and its contributors](https://paleobiodb.org/), through version 1.2 of the [PBDB Data Service](https://paleobiodb.org/data1.2/). Each displayed record links to its PBDB identifier, with DOI links provided where available. [Peters & McClennen (2016)](https://doi.org/10.1017/pab.2015.39) describe the data service. See the [Joggins coal map](https://coolcode.ca/coalbelow/) for mine workings and seams. Searches and selections run on the device and are never stored. External links open the referenced sites.
 
-Review the category, tags and icon in `tool.json`. `access: "browser"` tells the main
-catalogue that the tool works immediately without installation. `--owner` supports a different
-GitHub owner, but only projects owned by `jsdyer` inherit the CoolCode domain.
+## Build and refresh
 
-4. Replace the example in `web/` and its tests. Update the privacy explanation,
-   source attribution and README to describe the real tool.
-5. Test and preview:
+Use Python 3.12 or later. Run `python3 scripts/refresh.py` to fetch source data. Run `python3 scripts/build.py` for an offline build from the checked-in snapshot. Scheduled monthly and manually dispatched refresh jobs retrieve and validate fresh data before deployment. The displayed retrieval date records that successful fetch. Failed refreshes leave the previously published deployment available.
 
-```sh
-node --test tests/*.test.mjs
-python3 -m unittest discover -s tests -v
-python3 scripts/build.py
-python3 -m http.server 8000 --directory dist
-```
-
-Open `http://localhost:8000/`. The example trims lines, skips blanks and removes exact
-duplicates, preserving first-seen order and capitalization. It makes no API requests
-and does not persist text. Update that explanation if your app behaves differently.
-
-CI also tests the browser flow and mobile layout at a project subpath. Replace the
-sample assertions in `tests/browser_smoke.py` when implementing your own UI. To run
-that check locally (optional for ordinary preview):
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r tests/browser-requirements.txt
-python3 -m playwright install --with-deps chromium
-python3 tests/browser_smoke.py
-```
-
-Playwright is a test-only dependency; the app and its static build do not use it.
-
-## Publish and register
-
-When the actual tool is ready, in the **new tool repository** set **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push to `main`, or manually run **Browser tool · Check and
-publish** after enabling Pages. If the initial deployment ran before Pages was enabled,
-enable it and rerun. PRs only check/build and provide a downloadable preview artifact.
-
-Keep asset paths and module imports relative. Check `https://coolcode.ca/my-tool/`.
-Do not add a CNAME or set `coolcode.ca` as this project's custom domain; the account
-site supplies it. Only successful `main` builds deploy.
-
-After verifying the app, copy the reviewed object from `tool.json` into `data/tools.json`
-in [the main site](https://github.com/jsdyer/jsdyer.github.io). Each tool still builds
-independently. Update the hub record when listing metadata changes; the hub is the
-authority for discovery. Ordinary app updates touch only this repository.
-
-The main site separates **Use in your browser** from **Install yourself**. An app
-that asks for a file is still a browser tool. Standalone Linux packages should start
-in their own repositories with their own build/release workflow, rather than copying
-this browser-only scaffold. Their hub record uses `access: "install"`, links to an
-installation guide, and includes `requirements`.
-
-## Files
-
-| Path | Purpose |
-| --- | --- |
-| `tool.json` | Page metadata and a ready-to-copy catalogue record |
-| `web/` | HTML, responsive CSS, DOM interactions and separate model logic |
-| `scripts/build.py` | Escape metadata and build `web/` into `dist/` |
-| `scripts/init.py` | Set a new project's identity |
-| `tests/` | Application and builder tests |
-| `.github/workflows/pages.yml` | Check PRs and publish successful main builds |
-| `AGENTS.md` | Instructions for future coding work |
-
-Namespace optional storage as `coolcode:<tool-id>:<key>`; CoolCode paths share a
-browser origin. Don't save pasted text/uploads by default. Document external APIs
-and send only the information needed for the selected action. Never embed secrets.
-
-Scheduled refresh is opt-in. Validate source data before deploying, display its date,
-and preserve the last good deployment on failure. Public-repository schedules can
-stop after 60 days without repository activity.
-
-Templates don't propagate future edits automatically. Adopt fixes explicitly and
-consider a versioned reusable workflow once several tools confirm the shared process.
-Choose and add the intended software license before distributing a new project.
+Run `node --test tests/*.test.mjs` and `python3 -m unittest discover -s tests -v`. Run `python3 tests/browser_smoke.py` with Playwright Chromium installed, or set `CHROMIUM_PATH` to a compatible Chromium binary.
