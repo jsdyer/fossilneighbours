@@ -49,7 +49,10 @@ def main():
                 page.locator("#formation").select_option("Joggins")
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
-                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                overflow = page.evaluate("""() => [...document.querySelectorAll('body *')]
+                    .filter(e => e.getBoundingClientRect().right > innerWidth + 1)
+                    .map(e => [e.tagName, e.id, e.className, e.getBoundingClientRect().width])""")
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), overflow
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
                 assert not errors, errors
                 browser.close()

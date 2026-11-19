@@ -9,3 +9,7 @@ body>header{background:linear-gradient(110deg,#24372e 12%,transparent),repeating
 
 .filter-row{display:grid;grid-template-columns:1fr 1.3fr .7fr;gap:.75rem;margin:1rem 0}.filter-row input[type=number]{font:inherit;padding:.62rem .72rem;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:.35rem}
 @media(max-width:650px){.filter-row{grid-template-columns:1fr 1fr}.filter-row label:first-child{grid-column:1/-1}}
+
+label{grid-template-columns:minmax(0,1fr)}.controls select,.filter-row select,.filter-row input{width:100%;min-width:0}
+.focus,.records article,.peers button{min-width:0;overflow-wrap:anywhere}
+@media(max-width:650px){main .controls{grid-template-columns:minmax(0,1fr)}.filter-row{grid-template-columns:repeat(2,minmax(0,1fr))}.records,.peers{grid-template-columns:minmax(0,1fr)}.peers button{grid-template-columns:minmax(0,1fr)}}
