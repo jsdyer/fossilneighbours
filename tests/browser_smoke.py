@@ -41,7 +41,7 @@ def main():
                 page.locator("#age").fill("80")
                 assert page.locator("#records article").count() == 0
                 page.locator("#formation").select_option("Haslam")
-                assert "British Columbia" in page.locator("#province").inner_text()
+                assert page.locator("#province").text_content() == "British Columbia"
                 page.locator("#environment").check()
                 page.locator("#peers button").first.click()
                 assert page.locator("#return").is_visible()
