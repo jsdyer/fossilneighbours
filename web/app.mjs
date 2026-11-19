@@ -1,4 +1,4 @@
-import {matching, summarize, age} from "./model.mjs";
+import {matching, summarize, age, containsAge} from "./model.mjs";
 
 const el = id => document.getElementById(id);
 const element = (tag, text) => {
@@ -35,21 +35,35 @@ async function start() {
   }
   function renderRecords() {
     const c = collections.get(active);
-    el("examining").replaceChildren(link(c.name, recordURL("Collection", c.id)), " · " + (c.formation || "Unnamed formation") + " · " + age(c) + " · " + (c.env || "Environment unrecorded"));
-    const rows = matching(data.occurrences, [c.id], el("search").value).sort((a, b) => a.name.localeCompare(b.name));
+    const all = el("scope").value === "formation";
+    let ids = all ? data.presets[formation.value] : [c.id];
+    if (all) {
+      el("examining").textContent = formation.value + " Formation · all " + ids.length + " focal collections";
+    } else {
+      el("examining").replaceChildren(link(c.name, recordURL("Collection", c.id)), " · " + (c.formation || "Unnamed formation") + " · " + age(c) + " · " + (c.env || "Environment unrecorded"));
+    }
+    ids = ids.filter(id => containsAge(collections.get(id), el("age").value));
+    const rows = matching(data.occurrences, ids, el("search").value).sort((a, b) => a.name.localeCompare(b.name));
     el("record-count").textContent = rows.length + " matching occurrence " + (rows.length === 1 ? "record" : "records");
     const items = rows.map(row => {
       const item = element("article", ""), name = element("h3", row.name);
       const accepted = element("p", row.taxon ? "Accepted as " : "Accepted taxon ID unavailable");
       if (row.taxon) accepted.append(link(row.accepted, recordURL("Taxon", row.taxon)), " · " + row.rank);
       const source = element("p", ""); source.append(reference(row.ref));
-      item.append(name, accepted, source, link("Occurrence " + row.id, "https://paleobiodb.org/data1.2/occs/single.json?vocab=pbdb&id=" + row.id));
+      item.append(name, accepted);
+      if (all) {
+        const locality = collections.get(row.col), context = element("p", "");
+        context.append(link(locality.name, recordURL("Collection", row.col)), " · " + age(locality));
+        item.append(context);
+      }
+      item.append(source, link("Occurrence " + row.id, "https://paleobiodb.org/data1.2/occs/single.json?vocab=pbdb&id=" + row.id));
       return item;
     });
-    el("records").replaceChildren(...(items.length ? items : [element("p", "No matching identification in this collection.")]));
+    el("records").replaceChildren(...(items.length ? items : [element("p", "No occurrence records match this search.")]));
   }
   function choose(id) {
     active = id;
+    el("scope").value = "collection";
     el("return").hidden = active === Number(focus.value);
     for (const button of el("peers").querySelectorAll("button")) {
       button.setAttribute("aria-pressed", String(Number(button.value) === active));
@@ -79,6 +93,7 @@ async function start() {
     el("totals").textContent = `${totals.collections} collections · ${totals.occurrences} occurrence records · ${totals.taxa} accepted taxa`;
     focus.replaceChildren(...ids.map(id => new Option(collections.get(id).name + " · #" + id, id)));
     el("search").value = "";
+    el("age").value = "";
     renderFocus();
   }
   const requested = new URLSearchParams(location.search).get("formation");
@@ -87,6 +102,8 @@ async function start() {
   focus.addEventListener("change", () => { el("search").value = ""; renderFocus(); });
   env.addEventListener("change", renderFocus);
   el("search").addEventListener("input", renderRecords);
+  el("scope").addEventListener("change", renderRecords);
+  el("age").addEventListener("input", renderRecords);
   el("return").addEventListener("click", () => choose(Number(focus.value)));
   el("stamp").textContent = `PBDB data retrieved ${index.retrieved} · ${index.collections} collections including age neighbours · ${index.count} occurrence records`;
   renderFormation();

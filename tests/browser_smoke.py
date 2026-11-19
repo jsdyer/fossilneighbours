@@ -30,11 +30,16 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator("#focus-name").get_by_text("Coal Mine Point", exact=False).wait_for()
+                page.locator("#focus-name").filter(has_text="Coal Mine Point").wait_for()
                 assert "7 collections" in page.locator("#totals").inner_text()
                 page.locator("#search").fill("Hylonomus")
                 assert page.locator("#records article").count() > 0
                 assert page.locator("#records article").count() < 15
+                page.locator("#scope").select_option("formation")
+                page.locator("#age").fill("318")
+                assert page.locator("#records article").count() > 0
+                page.locator("#age").fill("80")
+                assert page.locator("#records article").count() == 0
                 page.locator("#formation").select_option("Haslam")
                 assert "British Columbia" in page.locator("#province").inner_text()
                 page.locator("#environment").check()

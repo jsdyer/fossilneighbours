@@ -14,3 +14,9 @@ export function summarize(records, collectionIds) {
 export function age(row) {
   return row.old === row.young ? `${row.old} Ma` : `${row.old}–${row.young} Ma`;
 }
+
+export function containsAge(collection, ageValue) {
+  if (ageValue === "") return true;
+  const target = Number(ageValue);
+  return Number.isFinite(target) && collection.young <= target && target <= collection.old;
+}

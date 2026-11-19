@@ -10,7 +10,7 @@ Start at Coal Mine Point in the Joggins Formation and search for Hylonomus to se
 
 The formation view counts PBDB occurrence IDs, distinct collection IDs, and distinct nonzero accepted taxon IDs separately. One occurrence represents a published identification at a collection. A collection can contain several records of the same taxon, and an accepted taxon can be at genus, family or another rank. Identifications without an accepted taxon ID remain searchable and do not enter the accepted-taxon count. The database reflects the literature entered to date and sampling effort varies.
 
-Choose a collection to read its occurrence records and source papers. Ages are the older and younger bounds assigned by the Paleobiology Database in millions of years before present. Overlap does not establish that two finds lived at the same moment. The environment filter requires identical, nonempty PBDB environment labels. “Marine indet.” and other broad labels retain their original meaning.
+Choose a collection to read its occurrence records and source papers. Select “Whole focal formation” to search all its collections by identification or by an age that falls inside a recorded interval, including the bounds. Ages are the older and younger bounds assigned by the Paleobiology Database in millions of years before present. Overlap does not establish that two finds lived at the same moment. The environment filter requires identical, nonempty PBDB environment labels. “Marine indet.” and other broad labels retain their original meaning.
 
 ## Coverage and sources
 
