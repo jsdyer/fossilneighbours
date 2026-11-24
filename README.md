@@ -23,3 +23,11 @@ Source data come from the [Paleobiology Database and its contributors](https://p
 Use Python 3.12 or later. Run `python3 scripts/refresh.py` to fetch source data. Run `python3 scripts/build.py` for an offline build from the checked-in snapshot. Scheduled monthly and manually dispatched refresh jobs retrieve and validate fresh data before deployment. The displayed retrieval date records that successful fetch. Failed refreshes leave the previously published deployment available.
 
 Run `node --test tests/*.test.mjs` and `python3 -m unittest discover -s tests -v`. Run `python3 tests/browser_smoke.py` with Playwright Chromium installed, or set `CHROMIUM_PATH` to a compatible Chromium binary.
+
+<!-- schedule-reliability -->
+## Schedule reliability
+
+Public GitHub repositories can have scheduled workflows disabled after 60 days of inactivity. A separate weekly [schedule guard](.github/workflows/schedule-guard.yml) calls GitHub's enable-workflow API for an explicit list of refresh workflows and itself. It can restore workflows disabled for inactivity, preserves manually disabled workflows, and runs independently of collection failures.
+
+This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
+<!-- /schedule-reliability -->
