@@ -9,16 +9,18 @@ import shutil
 import tempfile
 from urllib.parse import urlsplit
 
+from profiles import publish_profiles
+
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
 def metadata(root=ROOT):
     tool = json.loads((root / "tool.json").read_text(encoding="utf-8"))
-    required = {"id", "title", "description", "category", "tags", "icon", "url", "source", "hosting", "access", "data_info"}
+    required = {"id", "title", "description", "category", "tags", "icon", "url", "source", "hosting", "access", "data_info", "result_directory"}
     if not isinstance(tool, dict) or set(tool) != required:
         raise ValueError("tool.json has missing or unknown fields")
-    for key in required - {"tags", "data_info"}:
+    for key in required - {"tags", "data_info", "result_directory"}:
         if not isinstance(tool[key], str) or not tool[key].strip():
             raise ValueError(f"tool.json: {key} must be a nonempty string")
     if not SLUG.fullmatch(tool["id"]) or tool["url"] != f'/{tool["id"]}/' or tool["hosting"] != "project":
@@ -27,6 +29,9 @@ def metadata(root=ROOT):
         raise ValueError("tags must be an array of nonempty strings")
     if tool["access"] != "browser":
         raise ValueError("This starter produces an immediately usable browser tool; use access: browser")
+    directory = tool["result_directory"]
+    if not isinstance(directory, dict) or directory.get("path") != "records/" or not directory.get("title"):
+        raise ValueError("The fossil profile directory must point to records/")
     info = tool["data_info"]
     if (not isinstance(info, dict) or info.get("mode") not in ("snapshot", "live", "local", "reference", "mixed")
             or not isinstance(info.get("detail"), str) or not info["detail"].strip()):
@@ -58,6 +63,10 @@ def build(root=ROOT):
             archive.unlink()
         index = stage / "index.html"
         page = index.read_text(encoding="utf-8")
+        opening = publish_profiles(stage, json.loads((stage/"data/records.json").read_text()), json.loads((stage/"data/index.json").read_text()), tool)
+        if page.count("{{EXAMPLE}}") != 1:
+            raise ValueError("Missing fossil example placeholder")
+        page = page.replace("{{EXAMPLE}}", opening)
         for token, key in {"TITLE": "title", "DESCRIPTION": "description", "TOOL_ID": "id", "SOURCE_URL": "source"}.items():
             placeholder = "{{" + token + "}}"
             if placeholder not in page:

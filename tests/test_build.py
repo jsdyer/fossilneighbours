@@ -1,4 +1,6 @@
+import gzip
 import json
+from xml.etree import ElementTree as ET
 from pathlib import Path
 import shutil
 import sys
@@ -33,6 +35,37 @@ class BuildTests(unittest.TestCase):
         self.assertIn('href="./style.css"', page)
         self.assertFalse((self.root / "dist/private.txt").exists())
         self.assertTrue((self.root / "dist/.nojekyll").exists())
+
+    def test_sitemap_and_profiles_track_the_edition_and_escape_new_records(self):
+        data_dir = self.root / "web/data"
+        with gzip.open(data_dir / "records.json.gz") as fp:
+            data = json.load(fp)
+        focal = data["presets"]["Joggins"][0]
+        parent = next(c for c in data["collections"] if c["id"] == focal)
+        added = dict(parent, id=999999, name="Test fossil <&>", formation="Other")
+        added.pop("peers")
+        data["collections"].append(added)
+        parent["peers"]["age"].append(added["id"])
+        (data_dir / "records.json.gz").write_bytes(gzip.compress(json.dumps(data).encode()))
+        index = json.loads((data_dir / "index.json").read_text())
+        index["collections"] += 1
+        (data_dir / "index.json").write_text(json.dumps(index))
+        build(self.root)
+        out = self.root / "dist"
+        sitemap = ET.parse(out / "sitemap.xml")
+        paths = [row.text.removeprefix("https://coolcode.ca/fossilneighbours/") for row in sitemap.findall(".//{*}loc")]
+        self.assertEqual(len(paths), len(data["collections"]) + len(data["presets"]) + 1)
+        self.assertEqual(set(paths), {p.parent.relative_to(out).as_posix()+"/" for p in (out/"records").rglob("index.html")})
+        for path in paths:
+            content = (out / path / "index.html").read_text()
+            self.assertIn(f'<link rel="canonical" href="https://coolcode.ca/fossilneighbours/{path}">',content)
+            self.assertIn('<meta name="description"',content)
+        profile = (out/"records/collections/999999/index.html").read_text()
+        self.assertIn("Test fossil &lt;&amp;&gt;",profile)
+        self.assertIn("No occurrence records were returned",profile)
+        self.assertIn(f"collection={focal}&amp;peer=999999",profile)
+        self.assertIn("Overlap ",profile)
+        self.assertIn("PBDB collection record",profile)
 
     def test_url_matches_tool_id(self):
         self.edit(url="/different/")

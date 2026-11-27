@@ -1,4 +1,4 @@
-import {matching, summarize, age, containsAge} from "./model.mjs";
+import {matching, summarize, age, containsAge, initialSelection} from "./model.mjs";
 
 const el = id => document.getElementById(id);
 const element = (tag, text) => {
@@ -42,6 +42,8 @@ async function start() {
     } else {
       el("examining").replaceChildren(link(c.name, recordURL("Collection", c.id)), " · " + (c.formation || "Unnamed formation") + " · " + age(c) + " · " + (c.env || "Environment unrecorded"));
     }
+    const profile = all ? "./records/formations/" + encodeURIComponent(formation.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")) + "/" : "./records/collections/" + c.id + "/";
+    el("active-profile").replaceChildren(link(all ? "Read this formation’s fossil profile" : "Read the selected collection’s fossil profile", profile));
     ids = ids.filter(id => containsAge(collections.get(id), el("age").value));
     const rows = matching(data.occurrences, ids, el("search").value).sort((a, b) => a.name.localeCompare(b.name));
     el("record-count").textContent = rows.length + " matching occurrence " + (rows.length === 1 ? "record" : "records");
@@ -75,6 +77,7 @@ async function start() {
     el("focus-name").textContent = c.name;
     el("focus-context").textContent = [c.interval, age(c), c.env || "Environment unrecorded"].join(" · ");
     el("focus-ref").replaceChildren(link("Collection " + c.id, recordURL("Collection", c.id)), " · ", reference(c.ref));
+    el("focal-profile").replaceChildren(link("Read this collection’s fossil profile", "./records/collections/" + c.id + "/"));
     const peers = c.peers[env.checked ? "environment" : "age"];
     el("peers").replaceChildren(...peers.map(id => {
       const p = collections.get(id), b = element("button", "");
@@ -83,21 +86,24 @@ async function start() {
       b.addEventListener("click", () => choose(id));
       return b;
     }));
-    if (!peers.length) el("peers").append(element("p", "No other Canadian collection in this search has an overlapping age and the same recorded environment."));
+    if (!peers.length) el("peers").append(element("p", env.checked ? "No other Canadian collection in this search has an overlapping age and the same recorded environment." : "No Canadian age neighbours were selected for this collection."));
     choose(c.id);
   }
-  function renderFormation() {
+  function renderFormation(selected) {
     const ids = data.presets[formation.value], totals = summarize(data.occurrences, ids);
     el("formation-title").textContent = formation.value + " Formation";
     el("province").textContent = collections.get(ids[0]).province;
     el("totals").textContent = `${totals.collections} collections · ${totals.occurrences} occurrence records · ${totals.taxa} accepted taxa`;
     focus.replaceChildren(...ids.map(id => new Option(collections.get(id).name + " · #" + id, id)));
+    if (ids.includes(selected)) focus.value = selected;
     el("search").value = "";
     el("age").value = "";
     renderFocus();
   }
-  const requested = new URLSearchParams(location.search).get("formation");
-  if (Object.hasOwn(data.presets, requested)) formation.value = requested;
+  const preset = initialSelection(data, new URLSearchParams(location.search));
+  formation.replaceChildren(...Object.keys(data.presets).map(name => new Option(name, name)));
+  formation.value = preset.formation;
+  env.checked = preset.environment;
   formation.addEventListener("change", renderFormation);
   focus.addEventListener("change", () => { el("search").value = ""; renderFocus(); });
   env.addEventListener("change", renderFocus);
@@ -106,6 +112,12 @@ async function start() {
   el("age").addEventListener("input", renderRecords);
   el("return").addEventListener("click", () => choose(Number(focus.value)));
   el("stamp").textContent = `PBDB data retrieved ${index.retrieved} · ${index.collections} collections including age neighbours · ${index.count} occurrence records`;
-  renderFormation();
+  renderFormation(preset.collection);
+  if (preset.peer) choose(preset.peer);
+  el("scope").value = preset.scope;
+  el("search").value = preset.identification;
+  renderRecords();
+  el("explorer").hidden = false;
+  if (location.hash === "#record-heading") el("record-heading").scrollIntoView();
 }
-start().catch(() => el("totals").textContent = "The collection snapshot could not be loaded. Reload to try again.");
+start().catch(() => el("load-status").textContent = "The interactive snapshot could not load. Use the fossil profiles above to read collections and source records.");
